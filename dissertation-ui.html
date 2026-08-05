@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dissertation Supervisor AI</title>
+  <meta name="description" content="AI-powered dissertation examiner feedback — upload or paste your dissertation for a structured supervisor's report.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ── Reset ─────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:              #080b18;
+      --bg2:             #0d1127;
+      --card:            rgba(255,255,255,0.04);
+      --card-hover:      rgba(255,255,255,0.06);
+      --border:          rgba(255,255,255,0.08);
+      --border-active:   rgba(124,107,255,0.5);
+      --accent:          #7c6bff;
+      --accent2:         #00c9ff;
+      --accent-glow:     rgba(124,107,255,0.18);
+      --text:            #e8eaf6;
+      --text2:           #8892b0;
+      --text3:           #3d4566;
+      --ready:           #00d4a0;
+      --ready-bg:        rgba(0,212,160,0.1);
+      --conditional:     #f5a623;
+      --cond-bg:         rgba(245,166,35,0.1);
+      --notready:        #ff4757;
+      --notready-bg:     rgba(255,71,87,0.1);
+      --r: 14px;
+      --rsm: 8px;
+      --shadow: 0 8px 40px rgba(0,0,0,0.5);
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      background-image:
+        radial-gradient(ellipse at 15% 60%, rgba(124,107,255,0.07) 0%, transparent 55%),
+        radial-gradient(ellipse at 85% 15%, rgba(0,201,255,0.05) 0%, transparent 55%);
+      background-attachment: fixed;
+    }
+
+    /* ── Layout ────────────────────────────────────────────────── */
+    .wrap {
+      max-width: 840px;
+      margin: 0 auto;
+      padding: 36px 20px 100px;
+    }
+
+    /* ── Header ────────────────────────────────────────────────── */
+    .hdr {
+      text-align: center;
+      margin-bottom: 44px;
+      animation: fadeUp .55s ease both;
+    }
+    .hdr-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 76px; height: 76px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      border-radius: 22px;
+      font-size: 34px;
+      margin-bottom: 22px;
+      box-shadow: 0 0 48px var(--accent-glow), 0 2px 12px rgba(0,0,0,0.4);
+    }
+    .hdr h1 {
+      font-size: clamp(1.8rem, 4vw, 2.4rem);
+      font-weight: 800;
+      letter-spacing: -.035em;
+      background: linear-gradient(135deg, var(--text) 40%, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 10px;
+    }
+    .hdr p {
+      color: var(--text2);
+      font-size: .95rem;
+    }
+
+    /* ── Card ──────────────────────────────────────────────────── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 28px;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: var(--shadow);
+    }
+    .card + .card,
+    .card + .sections-lbl,
+    .sections-lbl + .sec-card,
+    .sec-card + .sec-card { margin-top: 14px; }
+
+    /* ── Tabs ──────────────────────────────────────────────────── */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: rgba(0,0,0,0.25);
+      border-radius: var(--rsm);
+      padding: 4px;
+      margin-bottom: 24px;
+    }
+    .tab {
+      flex: 1;
+      padding: 11px 16px;
+      border: none;
+      border-radius: 6px;
+      font-family: var(--font);
+      font-size: .875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .2s;
+      background: transparent;
+      color: var(--text2);
+    }
+    .tab.on {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 2px 14px var(--accent-glow);
+    }
+    .tab:hover:not(.on) {
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+    }
+
+    /* ── Textarea ──────────────────────────────────────────────── */
+    textarea {
+      width: 100%;
+      min-height: 230px;
+      background: rgba(0,0,0,0.22);
+      border: 1px solid var(--border);
+      border-radius: var(--rsm);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: .88rem;
+      line-height: 1.65;
+      padding: 16px;
+      resize: vertical;
+      outline: none;
+      transition: border-color .2s;
+    }
+    textarea::placeholder { color: var(--text3); }
+    textarea:focus { border-color: var(--border-active); }
+    .char-row {
+      text-align: right;
+      font-size: .72rem;
+      color: var(--text3);
+      margin-top: 6px;
+    }
+
+    /* ── Drop Zone ─────────────────────────────────────────────── */
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--rsm);
+      padding: 50px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .2s;
+      user-select: none;
+    }
+    .drop-zone:hover, .drop-zone.over {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+    }
+    .drop-zone .dz-icon { font-size: 52px; margin-bottom: 16px; }
+    .drop-zone h3 { font-size: .95rem; font-weight: 600; margin-bottom: 6px; }
+    .drop-zone p { color: var(--text2); font-size: .85rem; }
+    .drop-zone .browse { color: var(--accent); cursor: pointer; }
+    .drop-types {
+      margin-top: 12px;
+      font-size: .7rem;
+      color: var(--text3);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .file-chip {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      background: rgba(124,107,255,0.08);
+      border: 1px solid var(--border-active);
+      border-radius: var(--rsm);
+      margin-top: 12px;
+    }
+    .file-chip-icon { font-size: 26px; }
+    .file-chip-info { flex: 1; min-width: 0; }
+    .file-chip-name {
+      font-size: .88rem; font-weight: 500;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .file-chip-size { font-size: .72rem; color: var(--text2); }
+    .btn-x {
+      background: none; border: none;
+      color: var(--text2); cursor: pointer;
+      font-size: 1.1rem; padding: 4px 6px;
+      border-radius: 4px; transition: color .2s;
+    }
+    .btn-x:hover { color: var(--notready); }
+
+    /* ── Webhook Row ───────────────────────────────────────────── */
+    .wh-row { margin-top: 22px; }
+    .field-lbl {
+      display: block;
+      font-size: .7rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .09em;
+      color: var(--text2); margin-bottom: 8px;
+    }
+    .wh-inner { display: flex; gap: 8px; }
+    .url-in {
+      flex: 1;
+      background: rgba(0,0,0,0.22);
+      border: 1px solid var(--border);
+      border-radius: var(--rsm);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: .82rem;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .url-in:focus { border-color: var(--border-active); }
+    .mode-btns { display: flex; gap: 4px; }
+    .mode-btn {
+      padding: 8px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--rsm);
+      background: transparent;
+      color: var(--text2);
+      font-family: var(--font);
+      font-size: .72rem; font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+      white-space: nowrap;
+    }
+    .mode-btn.on {
+      background: rgba(124,107,255,0.14);
+      border-color: var(--border-active);
+      color: var(--accent);
+    }
+
+    /* ── Submit ────────────────────────────────────────────────── */
+    .btn-submit {
+      width: 100%;
+      margin-top: 22px;
+      padding: 16px;
+      background: linear-gradient(135deg, var(--accent) 0%, #9d7cf5 100%);
+      border: none;
+      border-radius: var(--rsm);
+      color: #fff;
+      font-family: var(--font);
+      font-size: 1rem; font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+      box-shadow: 0 4px 22px var(--accent-glow);
+      letter-spacing: .01em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .btn-submit:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 30px rgba(124,107,255,.35);
+    }
+    .btn-submit:active:not(:disabled) { transform: none; }
+    .btn-submit:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+    /* ── Alert ─────────────────────────────────────────────────── */
+    .alert {
+      padding: 14px 18px;
+      border-radius: var(--rsm);
+      font-size: .85rem;
+      line-height: 1.55;
+      margin-top: 14px;
+    }
+    .alert-err {
+      background: rgba(255,71,87,0.08);
+      border: 1px solid rgba(255,71,87,0.25);
+      color: #ff8f9c;
+    }
+
+    /* ── CORS box ──────────────────────────────────────────────── */
+    .cors-wrap { margin-top: 18px; }
+    .cors-summary {
+      font-size: .78rem;
+      color: var(--text2);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      user-select: none;
+      list-style: none;
+    }
+    .cors-summary::marker, .cors-summary::-webkit-details-marker { display: none; }
+    .cors-body {
+      margin-top: 10px;
+      padding: 16px;
+      background: rgba(0,201,255,0.05);
+      border: 1px solid rgba(0,201,255,0.15);
+      border-radius: var(--rsm);
+      font-size: .8rem;
+      color: var(--text2);
+      line-height: 1.6;
+    }
+    .cors-body p + p { margin-top: 8px; }
+    .cors-body code {
+      display: block;
+      background: rgba(0,0,0,0.35);
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-family: 'Courier New', monospace;
+      font-size: .78em;
+      margin: 10px 0;
+      white-space: pre;
+      color: #8adcff;
+    }
+    .cors-body strong { color: var(--text); }
+
+    /* ── Progress card ─────────────────────────────────────────── */
+    .progress-card { text-align: center; margin-top: 14px; }
+
+    .prog-steps {
+      display: flex;
+      justify-content: center;
+      position: relative;
+      margin-bottom: 32px;
+    }
+    .prog-steps::before {
+      content: '';
+      position: absolute;
+      top: 23px;
+      left: calc(50% - 140px);
+      right: calc(50% - 140px);
+      height: 2px;
+      background: var(--border);
+    }
+
+    .ps {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      max-width: 150px;
+      position: relative;
+      z-index: 1;
+    }
+    .ps-icon {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.35);
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      transition: all .35s;
+    }
+    .ps-lbl {
+      font-size: .72rem; font-weight: 500;
+      color: var(--text2);
+      transition: color .35s;
+    }
+    .ps.active .ps-icon {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+      animation: pulse 1.4s ease infinite;
+    }
+    .ps.active .ps-lbl { color: var(--accent); }
+    .ps.done .ps-icon  {
+      border-color: var(--ready);
+      background: rgba(0,212,160,.1);
+    }
+    .ps.done .ps-lbl { color: var(--ready); }
+
+    .prog-bar-wrap {
+      background: rgba(0,0,0,.25);
+      border-radius: 100px;
+      height: 4px;
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+    .prog-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 100px;
+      transition: width .9s ease;
+      width: 0%;
+    }
+    .prog-msg { color: var(--text2); font-size: .85rem; }
+    .spinner {
+      display: inline-block;
+      width: 13px; height: 13px;
+      border: 2px solid rgba(124,107,255,.3);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .75s linear infinite;
+      vertical-align: middle;
+      margin-right: 7px;
+    }
+
+    /* ── Report ────────────────────────────────────────────────── */
+    .rpt-card {
+      margin-top: 14px;
+      padding: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    .rpt-card::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 280px; height: 280px;
+      background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .badge-top {
+      position: absolute;
+      top: 28px; right: 28px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 100px;
+      font-size: .68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+    }
+    .b-ready    { background: var(--ready-bg);    color: var(--ready);    border: 1px solid rgba(0,212,160,.3); }
+    .b-cond     { background: var(--cond-bg);     color: var(--conditional); border: 1px solid rgba(245,166,35,.3); }
+    .b-notready { background: var(--notready-bg); color: var(--notready); border: 1px solid rgba(255,71,87,.3); }
+    .b-err      { background: rgba(136,146,176,.1); color: var(--text2);  border: 1px solid var(--border); }
+
+    .rpt-title {
+      font-size: 1.25rem; font-weight: 700;
+      letter-spacing: -.02em;
+      padding-right: 140px;
+      margin-bottom: 4px;
+    }
+    .rpt-meta { color: var(--text2); font-size: .78rem; margin-bottom: 22px; }
+
+    .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+    .sec-lbl {
+      font-size: .65rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .1em;
+      color: var(--text3); margin-bottom: 8px;
+    }
+    .verdict-txt {
+      font-size: .88rem; line-height: 1.72;
+      color: var(--text);
+    }
+    .verdict-txt strong { color: var(--accent); }
+
+    .pri-list {
+      list-style: none;
+      counter-reset: pri;
+      margin-top: 6px;
+    }
+    .pri-list li {
+      counter-increment: pri;
+      display: flex;
+      gap: 12px;
+      margin-bottom: 9px;
+      font-size: .875rem;
+      line-height: 1.55;
+      color: var(--text);
+    }
+    .pri-list li::before {
+      content: counter(pri);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 22px; height: 22px;
+      background: var(--accent);
+      border-radius: 50%;
+      font-size: .65rem; font-weight: 700;
+      color: #fff; flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .risk-box {
+      margin-top: 18px;
+      padding: 14px 16px;
+      background: rgba(255,71,87,.06);
+      border: 1px solid rgba(255,71,87,.2);
+      border-radius: var(--rsm);
+      font-size: .875rem;
+    }
+    .risk-lbl {
+      font-size: .65rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .1em;
+      color: var(--notready); margin-bottom: 6px;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 26px;
+      flex-wrap: wrap;
+    }
+    .btn-sec {
+      flex: 1;
+      min-width: 140px;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: var(--rsm);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: .85rem; font-weight: 500;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .btn-sec:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,.14);
+    }
+
+    /* ── Section cards ─────────────────────────────────────────── */
+    .sections-lbl {
+      font-size: .68rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .1em;
+      color: var(--text3);
+      margin-top: 28px; margin-bottom: 10px;
+    }
+
+    .sec-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      overflow: hidden;
+      transition: border-color .2s;
+    }
+    .sec-card:hover { border-color: rgba(255,255,255,.11); }
+
+    .sec-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      cursor: pointer;
+      user-select: none;
+      gap: 12px;
+    }
+    .sec-hdr-l { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .sec-name { font-size: .88rem; font-weight: 600; }
+    .chev { color: var(--text2); font-size: .65rem; transition: transform .2s; }
+    .sec-card.open .chev { transform: rotate(180deg); }
+
+    .sec-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height .35s ease, padding .25s;
+      padding: 0 20px;
+    }
+    .sec-card.open .sec-body {
+      max-height: 9999px;
+      padding: 4px 20px 20px;
+    }
+
+    .issue-blk {
+      border-radius: var(--rsm);
+      padding: 14px 16px;
+      margin-bottom: 12px;
+    }
+    .issue-blk.crit { background: rgba(255,71,87,.05);   border-left: 3px solid var(--notready); }
+    .issue-blk.major { background: rgba(245,166,35,.05); border-left: 3px solid var(--conditional); }
+    .issue-blk.minor { background: rgba(124,107,255,.05);border-left: 3px solid var(--accent); }
+
+    .issue-tier {
+      font-size: .62rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .1em;
+      margin-bottom: 8px;
+    }
+    .issue-blk.crit  .issue-tier { color: var(--notready); }
+    .issue-blk.major .issue-tier { color: var(--conditional); }
+    .issue-blk.minor .issue-tier { color: var(--accent); }
+
+    .issue-txt {
+      font-size: .83rem;
+      line-height: 1.65;
+      color: var(--text);
+    }
+
+    /* ── Utilities ─────────────────────────────────────────────── */
+    .hidden { display: none !important; }
+
+    /* ── Animations ────────────────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%,100% { box-shadow: 0 0 0 0 var(--accent-glow); }
+      50%      { box-shadow: 0 0 0 8px transparent; }
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ── Scrollbar ─────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 3px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ── Header ── -->
+  <div class="hdr">
+    <div class="hdr-icon">🎓</div>
+    <h1>Dissertation Supervisor AI</h1>
+    <p>Upload your PDF or paste your dissertation — get a full examiner-level review in minutes</p>
+  </div>
+
+  <!-- ── Input Card ── -->
+  <div class="card" id="input-card" style="animation:fadeUp .55s ease both">
+
+    <div class="tabs">
+      <button class="tab on" id="tab-text" onclick="switchMode('text')">📝 Paste Text</button>
+      <button class="tab"    id="tab-file" onclick="switchMode('file')">📎 Upload PDF</button>
+    </div>
+
+    <!-- Text mode -->
+    <div id="mode-text">
+      <textarea id="txt" placeholder="Paste your full dissertation here…&#10;&#10;The AI will read the structure, review each section individually, and produce a full supervisor's verdict with action items." oninput="updateChars()"></textarea>
+      <div class="char-row"><span id="char-cnt">0</span> characters</div>
+    </div>
+
+    <!-- File mode -->
+    <div id="mode-file" class="hidden">
+      <div class="drop-zone" id="dz"
+        ondrop="onDrop(event)" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)"
+        onclick="document.getElementById('fi').click()">
+        <div class="dz-icon">📄</div>
+        <h3>Drop your dissertation PDF here</h3>
+        <p>or <span class="browse">browse files</span></p>
+        <p class="drop-types">PDF only · Max 20 MB</p>
+        <input type="file" id="fi" accept=".pdf" style="display:none" onchange="onFileSelect(event)">
+      </div>
+      <div class="file-chip hidden" id="file-chip">
+        <span class="file-chip-icon">📄</span>
+        <div class="file-chip-info">
+          <div class="file-chip-name" id="fn">—</div>
+          <div class="file-chip-size" id="fs">—</div>
+        </div>
+        <button class="btn-x" onclick="clearFile()" title="Remove">✕</button>
+      </div>
+    </div>
+
+    <!-- Webhook URL row -->
+    <div class="wh-row">
+      <label class="field-lbl">n8n Webhook URL</label>
+      <div class="wh-inner">
+        <input class="url-in" type="text" id="wh-url" value="http://localhost:5678/webhook-test/dissertation-review">
+        <div class="mode-btns">
+          <button class="mode-btn on" id="btn-test" onclick="setMode('test')">Test</button>
+          <button class="mode-btn"    id="btn-live" onclick="setMode('live')">Live</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-submit" id="sub-btn" onclick="submitAnalysis()">
+      <span id="sub-icon">🔍</span>
+      <span id="sub-txt">Analyse Dissertation</span>
+    </button>
+
+    <div class="alert alert-err hidden" id="err-box"></div>
+
+    <!-- CORS help panel -->
+    <details class="cors-wrap">
+      <summary class="cors-summary">
+        ℹ️ &nbsp;If you see a network or CORS error — click to read the fix
+      </summary>
+      <div class="cors-body">
+        <p><strong>What is CORS?</strong> Your browser blocks this page from calling n8n (a different local address) as a security measure. This is called CORS — Cross-Origin Resource Sharing. It's not an error in your workflow; it's a browser restriction.</p>
+        <p><strong>The fix (one line in your Docker config):</strong></p>
+        <code>environment:
+  - N8N_CORS_ALLOW_ORIGIN=*</code>
+        <p>Add that line under <code>environment:</code> in your <code>docker-compose.yml</code>, then run:</p>
+        <code>docker compose restart</code>
+        <p>After restarting, refresh this page and try again. The browser will now be allowed to call n8n.</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- ── Progress Card ── -->
+  <div class="card progress-card hidden" id="prog-card">
+    <div class="prog-steps">
+      <div class="ps" id="ps1">
+        <div class="ps-icon">🔍</div>
+        <div class="ps-lbl">Macro Analysis</div>
+      </div>
+      <div class="ps" id="ps2">
+        <div class="ps-icon">📝</div>
+        <div class="ps-lbl">Section Review</div>
+      </div>
+      <div class="ps" id="ps3">
+        <div class="ps-icon">⚖️</div>
+        <div class="ps-lbl">Final Verdict</div>
+      </div>
+    </div>
+    <div class="prog-bar-wrap">
+      <div class="prog-bar-fill" id="prog-bar"></div>
+    </div>
+    <p class="prog-msg">
+      <span class="spinner"></span>
+      <span id="prog-msg">Sending to analysis pipeline…</span>
+    </p>
+  </div>
+
+  <!-- ── Report Output ── -->
+  <div id="rpt-out" class="hidden">
+
+    <!-- Verdict header -->
+    <div class="card rpt-card" id="verdict-card">
+      <div class="badge-top">
+        <span class="badge" id="status-badge">—</span>
+      </div>
+      <div class="rpt-title" id="rpt-title">—</div>
+      <div class="rpt-meta"  id="rpt-meta">—</div>
+
+      <div class="divider"></div>
+
+      <div class="sec-lbl">Supervisor's Verdict</div>
+      <div class="verdict-txt" id="verdict-stmt">—</div>
+
+      <div style="margin-top:20px">
+        <div class="sec-lbl">Priority Action List</div>
+        <ol class="pri-list" id="pri-list"></ol>
+      </div>
+
+      <div class="risk-box">
+        <div class="risk-lbl">⚠ Examiner Risk Assessment</div>
+        <div id="risk-txt">—</div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn-sec" onclick="downloadReport()">⬇ Download Full Report</button>
+        <button class="btn-sec" onclick="resetUI()">← New Analysis</button>
+      </div>
+    </div>
+
+    <!-- Section cards -->
+    <div class="sections-lbl hidden" id="sec-lbl">SECTION-BY-SECTION FEEDBACK</div>
+    <div id="sec-list"></div>
+
+  </div>
+
+</div><!-- /wrap -->
+
+<script>
+/* ── State ──────────────────────────────────────────────────────── */
+let mode        = 'text';
+let pickedFile  = null;
+let rawReport   = '';
+let timers      = [];
+
+/* ── Tab switching ──────────────────────────────────────────────── */
+function switchMode(m) {
+  mode = m;
+  document.getElementById('mode-text').classList.toggle('hidden', m !== 'text');
+  document.getElementById('mode-file').classList.toggle('hidden', m !== 'file');
+  document.getElementById('tab-text').classList.toggle('on', m === 'text');
+  document.getElementById('tab-file').classList.toggle('on', m !== 'text');
+}
+
+/* ── URL mode (test / live) ─────────────────────────────────────── */
+function setMode(m) {
+  const el   = document.getElementById('wh-url');
+  const path = el.value.replace(/.*\/webhook(?:-test)?\//, '');
+  el.value   = m === 'test'
+    ? 'http://localhost:5678/webhook-test/' + path
+    : 'http://localhost:5678/webhook/' + path;
+  document.getElementById('btn-test').classList.toggle('on', m === 'test');
+  document.getElementById('btn-live').classList.toggle('on', m !== 'test');
+}
+
+/* ── Char count ─────────────────────────────────────────────────── */
+function updateChars() {
+  document.getElementById('char-cnt').textContent =
+    document.getElementById('txt').value.length.toLocaleString();
+}
+
+/* ── File handling ──────────────────────────────────────────────── */
+function onDragOver(e) { e.preventDefault(); document.getElementById('dz').classList.add('over'); }
+function onDragLeave()  { document.getElementById('dz').classList.remove('over'); }
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById('dz').classList.remove('over');
+  const f = e.dataTransfer.files[0];
+  if (f) applyFile(f);
+}
+function onFileSelect(e) {
+  if (e.target.files[0]) applyFile(e.target.files[0]);
+}
+function applyFile(f) {
+  if (!f.name.toLowerCase().endsWith('.pdf')) {
+    showErr('Only PDF files are supported. To use a TXT file, switch to the Paste Text tab and paste the content there.');
+    return;
+  }
+  pickedFile = f;
+  document.getElementById('fn').textContent = f.name;
+  document.getElementById('fs').textContent = fmtBytes(f.size);
+  document.getElementById('dz').classList.add('hidden');
+  document.getElementById('file-chip').classList.remove('hidden');
+  hideErr();
+}
+function clearFile() {
+  pickedFile = null;
+  document.getElementById('dz').classList.remove('hidden');
+  document.getElementById('file-chip').classList.add('hidden');
+  document.getElementById('fi').value = '';
+}
+function fmtBytes(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+  return (b/1048576).toFixed(1) + ' MB';
+}
+
+/* ── Error helpers ──────────────────────────────────────────────── */
+function showErr(msg) {
+  const el = document.getElementById('err-box');
+  el.innerHTML = '⚠ ' + msg;
+  el.classList.remove('hidden');
+}
+function hideErr() { document.getElementById('err-box').classList.add('hidden'); }
+
+/* ── Progress ───────────────────────────────────────────────────── */
+function startProgress() {
+  document.getElementById('prog-card').classList.remove('hidden');
+  setStep(1, 'Running macro analysis on your dissertation…');
+  setBar(5);
+
+  timers.push(setTimeout(() => { setStep(2, 'Reviewing each section — this usually takes 2–4 minutes…'); setBar(28); }, 8000));
+  timers.push(setTimeout(() => { setPMsg('Analysing remaining sections…'); setBar(52); }, 45000));
+  timers.push(setTimeout(() => { setStep(3, 'Generating the final supervisor verdict…'); setBar(80); }, 95000));
+  timers.push(setTimeout(() => { setPMsg('Assembling full report…'); setBar(93); }, 160000));
+}
+function stopProgress() {
+  timers.forEach(clearTimeout); timers = [];
+  setBar(100);
+  [1,2,3].forEach(i => {
+    const el = document.getElementById('ps'+i);
+    el.classList.remove('active'); el.classList.add('done');
+  });
+  setTimeout(() => document.getElementById('prog-card').classList.add('hidden'), 600);
+}
+function setStep(n, msg) {
+  [1,2,3].forEach(i => {
+    const el = document.getElementById('ps'+i);
+    el.classList.remove('active','done');
+    if (i < n) el.classList.add('done');
+    if (i === n) el.classList.add('active');
+  });
+  setPMsg(msg);
+}
+function setBar(pct) { document.getElementById('prog-bar').style.width = pct + '%'; }
+function setPMsg(msg) { document.getElementById('prog-msg').textContent = msg; }
+
+/* ── Submission ─────────────────────────────────────────────────── */
+async function submitAnalysis() {
+  hideErr();
+  const url = document.getElementById('wh-url').value.trim();
+  if (!url) { showErr('Enter your n8n webhook URL first.'); return; }
+
+  if (mode === 'text' && !document.getElementById('txt').value.trim()) {
+    showErr('Please paste your dissertation text.'); return;
+  }
+  if (mode === 'file' && !pickedFile) {
+    showErr('Please select a PDF file to upload.'); return;
+  }
+
+  const btn = document.getElementById('sub-btn');
+  btn.disabled = true;
+  document.getElementById('sub-txt').textContent = 'Analysing…';
+  document.getElementById('sub-icon').textContent = '⏳';
+  document.getElementById('rpt-out').classList.add('hidden');
+  startProgress();
+
+  const controller = new AbortController();
+  const tid = setTimeout(() => controller.abort(), 660000); // 11 min
+
+  try {
+    let resp;
+
+    if (mode === 'text') {
+      resp = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: document.getElementById('txt').value.trim() }),
+        signal: controller.signal
+      });
+    } else {
+      const fd = new FormData();
+      fd.append('file', pickedFile, pickedFile.name);
+      resp = await fetch(url, { method: 'POST', body: fd, signal: controller.signal });
+    }
+
+    clearTimeout(tid);
+
+    if (!resp.ok) throw new Error('n8n returned HTTP ' + resp.status + ' ' + resp.statusText);
+
+    const body = await resp.text();
+
+    // n8n might return JSON-wrapped text in some configs
+    let reportText = body;
+    try {
+      const j = JSON.parse(body);
+      if (j.final_report) reportText = j.final_report;
+      else if (typeof j === 'string') reportText = j;
+    } catch (_) { /* raw text is fine */ }
+
+    rawReport = reportText;
+    stopProgress();
+    renderReport(reportText);
+
+  } catch (err) {
+    clearTimeout(tid);
+    stopProgress();
+    let msg = err.message;
+    if (/fetch|network|cors|load/i.test(msg)) {
+      msg = 'Could not connect to n8n. Check the webhook URL and make sure CORS is enabled (see the info panel below).';
+    } else if (/abort|timeout/i.test(msg)) {
+      msg = 'Request timed out after 11 minutes. n8n may still be processing — check your n8n execution log.';
+    }
+    showErr(msg);
+  } finally {
+    btn.disabled = false;
+    document.getElementById('sub-txt').textContent = 'Analyse Dissertation';
+    document.getElementById('sub-icon').textContent = '🔍';
+  }
+}
+
+/* ── Parsing ────────────────────────────────────────────────────── */
+function parseReport(raw) {
+  if (!raw || !raw.trim()) return { error: 'Empty response received from n8n.' };
+  if (/^(an error occurred|pipeline error)/i.test(raw.trim())) return { error: raw };
+
+  const r = {
+    title: '', date: '', sectionsRev: '',
+    status: 'UNKNOWN',
+    statement: '', priorities: [], risk: '',
+    sections: [], raw
+  };
+
+  r.title      = (raw.match(/Title:\s*(.+)/)             || [])[1]?.trim() || 'Dissertation Review';
+  r.date       = (raw.match(/Date:\s*(.+)/)              || [])[1]?.trim() || '';
+  r.sectionsRev= (raw.match(/Sections Reviewed:\s*(.+)/) || [])[1]?.trim() || '';
+
+  if (/READY FOR SUBMISSION/.test(raw))      r.status = 'READY FOR SUBMISSION';
+  else if (/\bNOT READY\b/.test(raw))        r.status = 'NOT READY';
+  else if (/\bCONDITIONAL\b/.test(raw))      r.status = 'CONDITIONAL';
+  else if (/\bERROR\b/.test(raw))            r.status = 'ERROR';
+
+  // Verdict statement
+  const sm = raw.match(/\*\*Verdict Statement:\*\*\s*([\s\S]*?)(?=\n\n\*\*|\*\*Priority|$)/);
+  if (sm) r.statement = sm[1].trim();
+
+  // Priority list
+  const pm = raw.match(/\*\*Priority Action List:\*\*\s*([\s\S]*?)(?=\n\n\*\*|\n##|$)/);
+  if (pm) {
+    r.priorities = pm[1].trim().split('\n')
+      .filter(l => /^\d+\./.test(l.trim()))
+      .map(l => l.replace(/^\d+\.\s*/, '').trim())
+      .filter(Boolean);
+  }
+
+  // Risk
+  const rm = raw.match(/\*\*Examiner Risk Assessment:\*\*\s*([\s\S]*?)(?=\n\n|$)/);
+  if (rm) r.risk = rm[1].trim();
+
+  // Sections
+  const fi = raw.indexOf('---SECTION BREAK---');
+  if (fi > -1) {
+    raw.slice(fi).split('---SECTION BREAK---')
+      .filter(s => s.trim())
+      .forEach(part => {
+        const nm = part.match(/Section:\s*(.+)/);
+        r.sections.push({
+          name:    nm?.[1]?.trim() || 'Section',
+          content: part.replace(/Section:\s*.+/, '').trim()
+        });
+      });
+  }
+
+  return r;
+}
+
+/* ── Rendering ──────────────────────────────────────────────────── */
+function renderReport(raw) {
+  const d = parseReport(raw);
+  if (d.error) { showErr(d.error); return; }
+
+  // Badge
+  const badge = document.getElementById('status-badge');
+  badge.textContent = d.status;
+  badge.className   = 'badge ' + badgeClass(d.status);
+
+  // Header
+  document.getElementById('rpt-title').textContent = d.title;
+  document.getElementById('rpt-meta').textContent  =
+    (d.date ? 'Date: ' + d.date : '') +
+    (d.sectionsRev ? '  ·  Sections: ' + d.sectionsRev : '');
+
+  // Statement
+  document.getElementById('verdict-stmt').innerHTML =
+    d.statement ? inlineMd(d.statement) : '<em style="color:var(--text3)">—</em>';
+
+  // Priorities
+  const pl = document.getElementById('pri-list');
+  pl.innerHTML = '';
+  (d.priorities.length ? d.priorities : ['No priority items specified.']).forEach(t => {
+    const li = document.createElement('li');
+    li.innerHTML = inlineMd(t);
+    pl.appendChild(li);
+  });
+
+  // Risk
+  document.getElementById('risk-txt').innerHTML =
+    d.risk ? inlineMd(d.risk) : '<em style="color:var(--text3)">—</em>';
+
+  // Sections
+  const sl = document.getElementById('sec-list');
+  sl.innerHTML = '';
+  if (d.sections.length) {
+    document.getElementById('sec-lbl').classList.remove('hidden');
+    d.sections.forEach((s, i) => sl.appendChild(buildSecCard(s, i)));
+  } else {
+    document.getElementById('sec-lbl').classList.add('hidden');
+  }
+
+  document.getElementById('rpt-out').classList.remove('hidden');
+  setTimeout(() => {
+    document.getElementById('rpt-out').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 100);
+}
+
+function badgeClass(s) {
+  if (s === 'READY FOR SUBMISSION') return 'b-ready';
+  if (s === 'CONDITIONAL')          return 'b-cond';
+  if (s === 'NOT READY')            return 'b-notready';
+  return 'b-err';
+}
+
+function inlineMd(t) {
+  return (t || '')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br>');
+}
+
+/* ── Section cards ──────────────────────────────────────────────── */
+function buildSecCard(sec, idx) {
+  const hasCrit  = /CRITICAL ISSUES/i.test(sec.content);
+  const hasMajor = /MAJOR IMPROVEMENTS/i.test(sec.content);
+
+  const card  = document.createElement('div');
+  card.className = 'sec-card';
+  card.id        = 'sc' + idx;
+
+  const pillHtml = hasCrit
+    ? '<span class="badge b-notready" style="font-size:.58rem;padding:3px 9px;">Critical</span>'
+    : hasMajor
+      ? '<span class="badge b-cond" style="font-size:.58rem;padding:3px 9px;">Major</span>'
+      : '';
+
+  card.innerHTML = `
+    <div class="sec-hdr" onclick="toggleSec(${idx})">
+      <div class="sec-hdr-l">
+        <span class="sec-name">${esc(sec.name)}</span>
+        ${pillHtml}
+      </div>
+      <span class="chev">▼</span>
+    </div>
+    <div class="sec-body">${renderSecContent(sec.content)}</div>
+  `;
+  return card;
+}
+
+function renderSecContent(content) {
+  if (!content) return '<p style="color:var(--text3);font-size:.83rem">No content.</p>';
+
+  const blocks = content.split(/(?=## )/);
+  let html = '';
+
+  blocks.forEach(blk => {
+    if (!blk.trim()) return;
+    let cls = '', tier = '';
+    if (/^## CRITICAL/i.test(blk))    { cls = 'crit';  tier = 'Critical Issues'; }
+    else if (/^## MAJOR/i.test(blk))  { cls = 'major'; tier = 'Major Improvements'; }
+    else if (/^## MINOR/i.test(blk))  { cls = 'minor'; tier = 'Minor Improvements'; }
+
+    if (cls) {
+      const body = blk.replace(/^## [^\n]+\n?/, '').trim();
+      html += `<div class="issue-blk ${cls}">
+        <div class="issue-tier">${tier}</div>
+        <div class="issue-txt">${fmtIssue(body)}</div>
+      </div>`;
+    } else {
+      html += `<div class="issue-txt" style="margin-bottom:10px">${inlineMd(blk)}</div>`;
+    }
+  });
+
+  return html || '<p style="color:var(--text3);font-size:.83rem">No issues flagged.</p>';
+}
+
+function fmtIssue(t) {
+  return t
+    .replace(/- WHAT IS WEAK:/gi,      '<br><strong style="color:var(--text2)">What is weak:</strong>')
+    .replace(/- WHY IT IS WEAK:/gi,    '<br><strong style="color:var(--text2)">Why it\'s weak:</strong>')
+    .replace(/- EXAMINER OBJECTION:/gi,'<br><strong style="color:var(--conditional)">Examiner objection:</strong>')
+    .replace(/- HOW TO FIX IT:/gi,     '<br><strong style="color:var(--ready)">How to fix it:</strong>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/^\s*-\s/gm, '• ')
+    .replace(/\n{2,}/g, '<br><br>')
+    .replace(/\n/g, '<br>');
+}
+
+function esc(s) {
+  return (s || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function toggleSec(idx) {
+  document.getElementById('sc'+idx).classList.toggle('open');
+}
+
+/* ── Download ───────────────────────────────────────────────────── */
+function downloadReport() {
+  if (!rawReport) return;
+  const a   = document.createElement('a');
+  a.href    = URL.createObjectURL(new Blob([rawReport], {type:'text/plain'}));
+  a.download = 'supervisor_report_' + new Date().toISOString().split('T')[0] + '.txt';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+/* ── Reset ──────────────────────────────────────────────────────── */
+function resetUI() {
+  document.getElementById('rpt-out').classList.add('hidden');
+  rawReport = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
