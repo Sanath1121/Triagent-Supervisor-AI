@@ -620,7 +620,101 @@
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 3px; }
-  </style>
+  
+    /* V2: Review Type Dropdown */
+    .review-type-wrapper {
+      margin-bottom: 16px;
+    }
+    .review-type-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+    .select-wrapper {
+      position: relative;
+      display: block;
+    }
+    .review-type-select {
+      width: 100%;
+      padding: 12px 40px 12px 16px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 14px;
+      font-family: inherit;
+      appearance: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      outline: none;
+    }
+    .review-type-select:hover,
+    .review-type-select:focus {
+      border-color: rgba(139,92,246,0.6);
+      background: rgba(139,92,246,0.08);
+    }
+    .review-type-select option {
+      background: #1a1a2e;
+      color: #fff;
+    }
+    .select-arrow {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(255,255,255,0.4);
+      pointer-events: none;
+      font-size: 11px;
+    }
+    /* V2: Citation Checklist Card */
+    .citation-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 20px;
+    }
+    .citation-card h3 {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.55);
+      margin: 0 0 14px 0;
+    }
+    .citation-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 24px;
+    }
+    .citation-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .citation-item-label {
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .citation-item-value {
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+    }
+    .recency-pass   { color: #4ade80; }
+    .recency-border { color: #facc15; }
+    .recency-fail   { color: #f87171; }
+    .match-ok   { color: #4ade80; }
+    .match-warn { color: #facc15; }
+
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -676,6 +770,19 @@
           <button class="mode-btn on" id="btn-test" onclick="setMode('test')">Test</button>
           <button class="mode-btn"    id="btn-live" onclick="setMode('live')">Live</button>
         </div>
+      </div>
+    </div>
+
+    <!-- V2: Review Type Dropdown -->
+    <div class="review-type-wrapper">
+      <label for="reviewType" class="review-type-label">Type of Review</label>
+      <div class="select-wrapper">
+        <select id="reviewType" class="review-type-select">
+          <option value="full_review">Full Review</option>
+          <option value="literature_review">Literature Review Only</option>
+          <option value="literature_methodology">Literature + Methodology Review</option>
+        </select>
+        <span class="select-arrow">&#9660;</span>
       </div>
     </div>
 
@@ -907,12 +1014,13 @@ async function submitAnalysis() {
       resp = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: document.getElementById('txt').value.trim() }),
+        body: JSON.stringify({ text: document.getElementById('txt').value.trim(), review_type: document.getElementById('reviewType').value }),
         signal: controller.signal
       });
     } else {
       const fd = new FormData();
       fd.append('file', pickedFile, pickedFile.name);
+      fd.append('review_type', document.getElementById('reviewType').value);
       resp = await fetch(url, { method: 'POST', body: fd, signal: controller.signal });
     }
 
@@ -1159,6 +1267,67 @@ function resetUI() {
   rawReport = '';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+    // V2: Parse Citation Checklist from report text
+    function parseCitationBlock(reportText) {
+      const lines = reportText.split('\n');
+      const startIdx = lines.findIndex(l => l.includes('CITATION CHECKLIST'));
+      const endIdx   = lines.findIndex((l, i) => i > startIdx && l.includes('====') && i > startIdx + 1);
+      if (startIdx < 0) return null;
+      const block = lines.slice(startIdx, endIdx > 0 ? endIdx + 1 : startIdx + 12).join('\n');
+
+      const get = (key) => {
+        const m = block.match(new RegExp(key + '\\s*:\\s*(.+)'));
+        return m ? m[1].trim() : 'N/A';
+      };
+      return {
+        intextTotal  : get('In-Text Citations \\(Total\\)'),
+        intextUnique : get('In-Text Citations \\(Unique\\)'),
+        refCount     : get('Reference List Entries'),
+        matchStatus  : get('Citation-Reference Match'),
+        recentLine   : get('Recent References'),
+        recencyStatus: get('60% Recency Requirement'),
+        windowLabel  : (block.match(/Recency Analysis \\(([^)]+)\\)/) || [])[1] || ''
+      };
+    }
+
+    function buildCitationCard(cit) {
+      if (!cit) return '';
+      const matchClass  = cit.matchStatus.includes('WARNING') ? 'match-warn' : 'match-ok';
+      const matchIcon   = cit.matchStatus.includes('WARNING') ? '&#9888;' : '&#10003;';
+      const recClass    = cit.recencyStatus.includes('FAIL') ? 'recency-fail'
+                        : cit.recencyStatus.includes('BORDERLINE') ? 'recency-border'
+                        : 'recency-pass';
+      const recIcon     = cit.recencyStatus.includes('FAIL') ? '&#10007;'
+                        : cit.recencyStatus.includes('BORDERLINE') ? '&#9888;'
+                        : '&#10003;';
+      return `<div class="citation-card">
+        <h3>Citation Checklist</h3>
+        <div class="citation-grid">
+          <div class="citation-item">
+            <span class="citation-item-label">In-Text Citations (Total)</span>
+            <span class="citation-item-value">${cit.intextTotal}</span>
+          </div>
+          <div class="citation-item">
+            <span class="citation-item-label">In-Text Citations (Unique)</span>
+            <span class="citation-item-value">${cit.intextUnique}</span>
+          </div>
+          <div class="citation-item">
+            <span class="citation-item-label">Reference List Entries</span>
+            <span class="citation-item-value">${cit.refCount}</span>
+          </div>
+          <div class="citation-item">
+            <span class="citation-item-label">Citation Match</span>
+            <span class="citation-item-value ${matchClass}">${matchIcon} ${cit.matchStatus.replace('OK - ','').replace('WARNING - ','')}</span>
+          </div>
+          <div class="citation-item" style="grid-column:1/-1">
+            <span class="citation-item-label">Recency (${cit.windowLabel}) &mdash; 60% Requirement</span>
+            <span class="citation-item-value ${recClass}">${recIcon} ${cit.recentLine} &nbsp;&nbsp;${cit.recencyStatus}</span>
+          </div>
+        </div>
+      </div>`;
+    }
+
 </script>
 </body>
 </html>

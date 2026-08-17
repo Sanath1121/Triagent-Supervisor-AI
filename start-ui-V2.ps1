@@ -1,11 +1,11 @@
-$Port   = 8080
+﻿$Port   = 8080
 $Folder = $PSScriptRoot
 if (-not $Folder) { $Folder = Get-Location }
-$UIFile = Join-Path $Folder "dissertation-ui.html"
-$URL    = "http://localhost:$Port/dissertation-ui.html"
+$UIFile = Join-Path $Folder "dissertation-ui-V2.html"
+$URL    = "http://localhost:$Port/dissertation-ui-V2.html"
 
 if (-not (Test-Path $UIFile)) {
-    Write-Host "ERROR: dissertation-ui.html not found in $Folder" -ForegroundColor Red
+    Write-Host "ERROR: dissertation-ui-V2.html not found in $Folder" -ForegroundColor Red
     exit 1
 }
 
@@ -20,6 +20,4 @@ Write-Host ""
 
 Start-Process $URL
 python -m http.server $Port --directory $Folder
-# To run the server, you need to have Python installed and available in your system's PATH.
-#The start code to start the server is, open powershell and run the following command:
-# powershell -ExecutionPolicy Bypass -File .\start-ui.ps1 
+
