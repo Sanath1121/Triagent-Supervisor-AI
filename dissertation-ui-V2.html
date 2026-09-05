@@ -332,86 +332,143 @@
     .cors-body strong { color: var(--text); }
 
     /* ── Progress card ─────────────────────────────────────────── */
-    .progress-card { text-align: center; margin-top: 14px; }
-
-    .prog-steps {
-      display: flex;
-      justify-content: center;
+    .progress-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 36px 28px 30px;
+      text-align: center;
+      margin-top: 14px;
       position: relative;
-      margin-bottom: 32px;
+      overflow: hidden;
     }
-    .prog-steps::before {
-      content: '';
+    .rm-track {
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin: 24px auto 34px;
+      max-width: 680px;
+      padding: 0 10px;
+    }
+    .rm-line-bg {
       position: absolute;
-      top: 23px;
-      left: calc(50% - 140px);
-      right: calc(50% - 140px);
-      height: 2px;
-      background: var(--border);
+      top: 24px; left: 35px; right: 35px;
+      height: 4px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 4px;
+      z-index: 1;
     }
-
-    .ps {
+    .rm-line-fill {
+      position: absolute;
+      top: 24px; left: 35px;
+      height: 4px;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent) 0%, var(--accent2) 100%);
+      border-radius: 4px;
+      z-index: 2;
+      transition: width 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 14px rgba(0, 201, 255, 0.6);
+    }
+    .rm-vehicle {
+      position: absolute;
+      top: 10px; left: 35px;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: rgba(13, 17, 39, 0.9);
+      border: 2px solid var(--accent2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      z-index: 4;
+      transition: left 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+      transform: translateX(-50%);
+      opacity: 0;
+      box-shadow: 0 0 16px var(--accent2), inset 0 0 8px rgba(0,201,255,0.4);
+    }
+    .rm-vehicle.driving {
+      opacity: 1;
+      animation: vehicle-bob 1.6s ease-in-out infinite alternate;
+    }
+    @keyframes vehicle-bob {
+      0% { transform: translateX(-50%) translateY(0) scale(1); }
+      100% { transform: translateX(-50%) translateY(-3px) scale(1.08); }
+    }
+    .rm-step {
+      position: relative;
+      z-index: 3;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
-      flex: 1;
-      max-width: 150px;
-      position: relative;
-      z-index: 1;
+      width: 70px;
     }
-    .ps-icon {
+    .rm-icon {
       width: 48px; height: 48px;
       border-radius: 50%;
-      background: rgba(0,0,0,0.35);
+      background: var(--bg2);
       border: 2px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.3rem;
-      transition: all .35s;
+      font-size: 19px;
+      margin-bottom: 10px;
+      transition: all 0.4s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
-    .ps-lbl {
-      font-size: .72rem; font-weight: 500;
-      color: var(--text2);
-      transition: color .35s;
+    .rm-lbl {
+      font-size: 0.65rem; font-weight: 600;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      transition: color 0.4s ease;
+      line-height: 1.35;
     }
-    .ps.active .ps-icon {
-      border-color: var(--accent);
-      background: var(--accent-glow);
-      animation: pulse 1.4s ease infinite;
+    .rm-step.active .rm-icon {
+      border-color: var(--accent2);
+      background: rgba(0,201,255,.15);
+      box-shadow: 0 0 18px var(--accent2);
+      animation: pulse-ring 1.8s infinite;
     }
-    .ps.active .ps-lbl { color: var(--accent); }
-    .ps.done .ps-icon  {
+    .rm-step.active .rm-lbl { color: var(--accent2); }
+    .rm-step.done .rm-icon {
       border-color: var(--ready);
-      background: rgba(0,212,160,.1);
+      background: rgba(0, 212, 160, 0.15);
+      color: var(--ready);
+      box-shadow: 0 0 12px rgba(0,212,160,0.3);
     }
-    .ps.done .ps-lbl { color: var(--ready); }
+    .rm-step.done .rm-lbl { color: var(--ready); }
 
-    .prog-bar-wrap {
-      background: rgba(0,0,0,.25);
-      border-radius: 100px;
-      height: 4px;
-      overflow: hidden;
-      margin-bottom: 14px;
+    @keyframes pulse-ring {
+      0% { box-shadow: 0 0 0 0 rgba(0, 201, 255, 0.5); }
+      70% { box-shadow: 0 0 0 12px rgba(0, 201, 255, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(0, 201, 255, 0); }
     }
-    .prog-bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      border-radius: 100px;
-      transition: width .9s ease;
-      width: 0%;
+    .prog-msg { 
+      color: var(--text2); 
+      font-size: .88rem; 
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
-    .prog-msg { color: var(--text2); font-size: .85rem; }
     .spinner {
       display: inline-block;
-      width: 13px; height: 13px;
-      border: 2px solid rgba(124,107,255,.3);
-      border-top-color: var(--accent);
+      width: 14px; height: 14px;
+      border: 2px solid rgba(0,201,255,.3);
+      border-top-color: var(--accent2);
       border-radius: 50%;
       animation: spin .75s linear infinite;
-      vertical-align: middle;
-      margin-right: 7px;
+    }
+
+    @media (max-width: 640px) {
+      .rm-track { margin: 16px auto 26px; }
+      .rm-step { width: 56px; }
+      .rm-icon { width: 40px; height: 40px; font-size: 16px; margin-bottom: 6px; }
+      .rm-lbl { font-size: 0.55rem; }
+      .rm-line-bg, .rm-line-fill { top: 20px; left: 28px; right: 28px; }
+      .rm-vehicle { top: 6px; width: 28px; height: 28px; font-size: 13px; }
     }
 
     /* ── Report ────────────────────────────────────────────────── */
@@ -812,26 +869,35 @@
 
   <!-- ── Progress Card ── -->
   <div class="card progress-card hidden" id="prog-card">
-    <div class="prog-steps">
-      <div class="ps" id="ps1">
-        <div class="ps-icon">🔍</div>
-        <div class="ps-lbl">Macro Analysis</div>
+    <div class="rm-track">
+      <div class="rm-line-bg"></div>
+      <div class="rm-line-fill" id="rm-fill"></div>
+      <div class="rm-vehicle" id="rm-veh">🚗</div>
+
+      <div class="rm-step" id="ps1">
+        <div class="rm-icon">🏁</div>
+        <div class="rm-lbl">Document<br>Ingestion</div>
       </div>
-      <div class="ps" id="ps2">
-        <div class="ps-icon">📝</div>
-        <div class="ps-lbl">Section Review</div>
+      <div class="rm-step" id="ps2">
+        <div class="rm-icon">🔍</div>
+        <div class="rm-lbl">Macro<br>Analyser</div>
       </div>
-      <div class="ps" id="ps3">
-        <div class="ps-icon">⚖️</div>
-        <div class="ps-lbl">Final Verdict</div>
+      <div class="rm-step" id="ps3">
+        <div class="rm-icon">📝</div>
+        <div class="rm-lbl">Section<br>Analyser</div>
       </div>
-    </div>
-    <div class="prog-bar-wrap">
-      <div class="prog-bar-fill" id="prog-bar"></div>
+      <div class="rm-step" id="ps4">
+        <div class="rm-icon">⚖️</div>
+        <div class="rm-lbl">Verdict<br>Generator</div>
+      </div>
+      <div class="rm-step" id="ps5">
+        <div class="rm-icon">🎯</div>
+        <div class="rm-lbl">Final<br>Report</div>
+      </div>
     </div>
     <p class="prog-msg">
       <span class="spinner"></span>
-      <span id="prog-msg">Sending to analysis pipeline…</span>
+      <span id="prog-msg">Initializing pipeline…</span>
     </p>
   </div>
 
@@ -847,6 +913,8 @@
       <div class="rpt-meta"  id="rpt-meta">—</div>
 
       <div class="divider"></div>
+
+      <div id="citation-card-slot"></div>
 
       <div class="sec-lbl">Supervisor's Verdict</div>
       <div class="verdict-txt" id="verdict-stmt">—</div>
@@ -955,33 +1023,66 @@ function hideErr() { document.getElementById('err-box').classList.add('hidden');
 /* ── Progress ───────────────────────────────────────────────────── */
 function startProgress() {
   document.getElementById('prog-card').classList.remove('hidden');
-  setStep(1, 'Running macro analysis on your dissertation…');
-  setBar(5);
+  document.getElementById('rm-veh').classList.add('driving');
+  
+  setStep(1, 'Ingesting document and validating formatting…', 0);
 
-  timers.push(setTimeout(() => { setStep(2, 'Reviewing each section — this usually takes 2–4 minutes…'); setBar(28); }, 8000));
-  timers.push(setTimeout(() => { setPMsg('Analysing remaining sections…'); setBar(52); }, 45000));
-  timers.push(setTimeout(() => { setStep(3, 'Generating the final supervisor verdict…'); setBar(80); }, 95000));
-  timers.push(setTimeout(() => { setPMsg('Assembling full report…'); setBar(93); }, 160000));
+  timers.push(setTimeout(() => { 
+    setStep(2, 'Macro Analyser extracting global thesis and structural context…', 25); 
+  }, 4000));
+  
+  timers.push(setTimeout(() => { 
+    setStep(3, 'Section Analyser reviewing individual chapters (takes 2–4 mins)…', 50); 
+  }, 12000));
+  
+  timers.push(setTimeout(() => { 
+    setPMsg('Evaluating literature, methodology, and theoretical framework…'); 
+  }, 45000));
+  
+  timers.push(setTimeout(() => { 
+    setStep(4, 'Verdict Generator synthesizing Viva risk assessment…', 75); 
+  }, 95000));
+  
+  timers.push(setTimeout(() => { 
+    setPMsg('Assembling final supervisor report…'); 
+  }, 130000));
 }
+
 function stopProgress() {
   timers.forEach(clearTimeout); timers = [];
-  setBar(100);
-  [1,2,3].forEach(i => {
+  setStep(5, 'Report delivered successfully.', 100);
+  
+  [1,2,3,4,5].forEach(i => {
     const el = document.getElementById('ps'+i);
-    el.classList.remove('active'); el.classList.add('done');
+    el.classList.remove('active'); 
+    el.classList.add('done');
   });
-  setTimeout(() => document.getElementById('prog-card').classList.add('hidden'), 600);
+  
+  setTimeout(() => {
+    document.getElementById('prog-card').classList.add('hidden');
+    document.getElementById('rm-veh').classList.remove('driving');
+  }, 800);
 }
-function setStep(n, msg) {
-  [1,2,3].forEach(i => {
+
+function setStep(n, msg, pct) {
+  [1,2,3,4,5].forEach(i => {
     const el = document.getElementById('ps'+i);
+    if (!el) return;
     el.classList.remove('active','done');
     if (i < n) el.classList.add('done');
     if (i === n) el.classList.add('active');
   });
   setPMsg(msg);
+  
+  const rmFill = document.getElementById('rm-fill');
+  const rmVeh = document.getElementById('rm-veh');
+  if (rmFill && rmVeh) {
+    const ratio = pct / 100;
+    rmFill.style.width = 'calc((100% - 70px) * ' + ratio + ')';
+    rmVeh.style.left = 'calc(35px + (100% - 70px) * ' + ratio + ')';
+  }
 }
-function setBar(pct) { document.getElementById('prog-bar').style.width = pct + '%'; }
+
 function setPMsg(msg) { document.getElementById('prog-msg').textContent = msg; }
 
 /* ── Submission ─────────────────────────────────────────────────── */
@@ -1147,12 +1248,17 @@ function renderReport(raw) {
   document.getElementById('risk-txt').innerHTML =
     d.risk ? inlineMd(d.risk) : '<em style="color:var(--text3)">—</em>';
 
+  // Citation Card — parse & render deterministic citation audit block
+  const citData = parseCitationBlock(raw);
+  const citSlot = document.getElementById('citation-card-slot');
+  if (citSlot) citSlot.innerHTML = buildCitationCard(citData);
+
   // Sections
   const sl = document.getElementById('sec-list');
   sl.innerHTML = '';
   if (d.sections.length) {
     document.getElementById('sec-lbl').classList.remove('hidden');
-    d.sections.forEach((s, i) => sl.appendChild(buildSecCard(s, i)));
+    d.sections.forEach((s, i) => sl.appendChild(buildSecCard(s, i, d.status)));
   } else {
     document.getElementById('sec-lbl').classList.add('hidden');
   }
@@ -1177,19 +1283,44 @@ function inlineMd(t) {
 }
 
 /* ── Section cards ──────────────────────────────────────────────── */
-function buildSecCard(sec, idx) {
-  const hasCrit  = /CRITICAL ISSUES/i.test(sec.content);
-  const hasMajor = /MAJOR IMPROVEMENTS/i.test(sec.content);
+function buildSecCard(sec, idx, globalStatus) {
+  // Check if there are ACTUAL critical issues (not just the header "## CRITICAL ISSUES\nNone")
+  const critMatch = sec.content.match(/## CRITICAL ISSUES([\s\S]*?)(?=## MAJOR|## MINOR|$)/i);
+  const critText = critMatch ? critMatch[1].trim() : '';
+  const hasCrit = critText.length > 0 && !/^(none|no critical|there are no|\*there are no)/i.test(critText);
+
+  // Check if there are BLOCKING issues
+  const hasBlocking = /\[BLOCKING\]/i.test(sec.content);
+
+  // Check if there are ADVISORY issues
+  const hasAdvisory = /\[ADVISORY\]/i.test(sec.content);
 
   const card  = document.createElement('div');
   card.className = 'sec-card';
   card.id        = 'sc' + idx;
 
-  const pillHtml = hasCrit
-    ? '<span class="badge b-notready" style="font-size:.58rem;padding:3px 9px;">Critical</span>'
-    : hasMajor
-      ? '<span class="badge b-cond" style="font-size:.58rem;padding:3px 9px;">Major</span>'
-      : '';
+  let pillHtml = '';
+  
+  // PASSIVENESS LOGIC: If the overall paper is READY FOR SUBMISSION, downgrade alarming red tags
+  const isReady = (globalStatus === 'READY FOR SUBMISSION');
+  
+  if (hasCrit) {
+    if (isReady) {
+      pillHtml = '<span class="badge" style="font-size:.58rem;padding:3px 9px;background:rgba(124,107,255,0.15);color:#a594fd;border:1px solid rgba(124,107,255,0.3);">Viva Prep</span>';
+    } else {
+      pillHtml = '<span class="badge b-notready" style="font-size:.58rem;padding:3px 9px;">Critical Flaw</span>';
+    }
+  } else if (hasBlocking) {
+    if (isReady) {
+      pillHtml = '<span class="badge" style="font-size:.58rem;padding:3px 9px;background:rgba(124,107,255,0.15);color:#a594fd;border:1px solid rgba(124,107,255,0.3);">Viva Prep</span>';
+    } else {
+      pillHtml = '<span class="badge b-cond" style="font-size:.58rem;padding:3px 9px;">Revision Needed</span>';
+    }
+  } else if (hasAdvisory) {
+    pillHtml = '<span class="badge" style="font-size:.58rem;padding:3px 9px;background:rgba(124,107,255,0.15);color:#a594fd;border:1px solid rgba(124,107,255,0.3);">Advisory</span>';
+  } else {
+    pillHtml = '<span class="badge b-ready" style="font-size:.58rem;padding:3px 9px;">Passed</span>';
+  }
 
   card.innerHTML = `
     <div class="sec-hdr" onclick="toggleSec(${idx})">
@@ -1199,12 +1330,12 @@ function buildSecCard(sec, idx) {
       </div>
       <span class="chev">▼</span>
     </div>
-    <div class="sec-body">${renderSecContent(sec.content)}</div>
+    <div class="sec-body">${renderSecContent(sec.content, isReady)}</div>
   `;
   return card;
 }
 
-function renderSecContent(content) {
+function renderSecContent(content, isReady) {
   if (!content) return '<p style="color:var(--text3);font-size:.83rem">No content.</p>';
 
   const blocks = content.split(/(?=## )/);
@@ -1219,8 +1350,20 @@ function renderSecContent(content) {
 
     if (cls) {
       const body = blk.replace(/^## [^\n]+\n?/, '').trim();
-      html += `<div class="issue-blk ${cls}">
-        <div class="issue-tier">${tier}</div>
+      // Skip empty or "None" critical issues blocks so we don't render a false red alarm box
+      if (cls === 'crit' && /^(none|no critical|there are no|\*there are no)/i.test(body)) {
+        return;
+      }
+      // If it's a critical/major block but paper is READY, make it render as a minor/advisory block
+      let renderCls = cls;
+      let renderTier = tier;
+      if (isReady && (cls === 'crit' || cls === 'major')) {
+        renderCls = 'minor';
+        renderTier = 'Viva Preparation Note';
+      }
+      
+      html += `<div class="issue-blk ${renderCls}">
+        <div class="issue-tier">${renderTier}</div>
         <div class="issue-txt">${fmtIssue(body)}</div>
       </div>`;
     } else {
@@ -1228,7 +1371,7 @@ function renderSecContent(content) {
     }
   });
 
-  return html || '<p style="color:var(--text3);font-size:.83rem">No issues flagged.</p>';
+  return html || '<p style="color:var(--ready);font-size:.83rem">✓ No issues flagged in this section.</p>';
 }
 
 function fmtIssue(t) {

@@ -1,4 +1,4 @@
-﻿$Port   = 8080
+$Port   = 8085
 $Folder = $PSScriptRoot
 if (-not $Folder) { $Folder = Get-Location }
 $UIFile = Join-Path $Folder "dissertation-ui-V2.html"
