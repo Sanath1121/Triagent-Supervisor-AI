@@ -423,9 +423,14 @@ ightarrow$ **Import from File...**
 ### Step 3: Configure Credentials in n8n
 1. **Google Gemini / Vertex AI:**
    - In the LangChain model nodes, assign your Google Palm / Gemini API credential.
-2. **PostgreSQL Credentials:**
-   - In `PostgreSQL Node: Log Job`, assign your PostgreSQL connection.
-   - *(Note: Ensure SSL is set to `disable` if connecting over an internal Docker network).*
+2. **PostgreSQL Credentials (matching `docker-compose.yml` defaults):**
+   - **Host:** `postgres` (or `localhost` if running outside Docker)
+   - **Port:** `5432`
+   - **Database:** `dissertation_db`
+   - **User:** `postgres`
+   - **Password:** `password`
+   - **SSL:** `disable` (strictly required for internal Docker bridge network)
+   - In `PostgreSQL Node: Log Job`, assign this connection.
 
 ### Step 4: Database Schema Verification
 Execute [`schema.sql`](schema.sql) in your PostgreSQL database instance using `psql`, pgAdmin, or DBeaver:

@@ -8,7 +8,7 @@ This document provides a realistic, end-to-end example of the data payload sent 
 ## 1. Input Specification
 
 ### 1.1. HTTP API Request Format
-When calling the production endpoint `POST https://<YOUR-N8N-DOMAIN>/webhook/dissertation-eval`, the client provides a JSON payload containing the manuscript text and the review scope:
+When calling the production endpoint `POST https://<YOUR-N8N-DOMAIN>/webhook/dissertation-review`, the client provides a JSON payload containing the manuscript text and the review scope:
 
 ```json
 {
